@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 # IntegerNet_AddToCartGraphQl Magento Module
 <div align="center">
 
@@ -13,7 +14,7 @@
 
 ---
 
-This module provides support to add products to cart via GraphQl
+This module provides support to add products to cart via GraphQl. For this to be available for guests, it is needed to force quote creation, which is done upon first checkout session creation.
 
 ## Installation
 
@@ -27,9 +28,36 @@ This module provides support to add products to cart via GraphQl
     bin/magento setup:upgrade
     ```
 
-## Configuration
+
+For your reference, there is also an add to cart snippet included.  
 
 ## Usage
+
+### Configurable Products (Hyvä)
+
+Please mind: if you plan to use this for configurable products in the Hyvä theme, you need to pass the product selection to the addtocart component. 
+
+The easiest way is to add a method to Magento_ConfigurableProduct/templates/product/view/type/options/js/configurable-options.phtml
+
+
+        updateCurrentSelection() {
+            window.dispatchEvent(
+                new CustomEvent(
+                    "update-currentSelection-" + this.productId,
+                    {
+                        detail: this.selectedValues
+                    }
+                )
+            );
+        },
+
+This should be called whenever a selection is made, in Hyvä default you would prepend its call to the method
+
+    changeOption(optionId, value) {
+        [...]
+        this.updateCurrentSelection()
+    }
+
 
 ## Changelog
 
@@ -61,7 +89,7 @@ Please see [CONTRIBUTING](CONTRIBUTING.md) for details.
 
 ## Security
 
-If you discover any security related issues, please email lb@integer-net.de instead of using the issue tracker.
+If you discover any security related issues, please email security@integer-net.de instead of using the issue tracker.
 
 ## Credits
 
@@ -87,3 +115,4 @@ The MIT License (MIT). Please see [License File](LICENSE) for more information.
 [link-maintainability]: https://codeclimate.com/github/integer-net/magento2-addtocartgraphql
 [link-author]: https://github.com/lbuchholz
 [link-contributors]: ../../contributors
+=======

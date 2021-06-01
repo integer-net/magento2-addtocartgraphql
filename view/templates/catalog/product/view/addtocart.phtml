@@ -1,0 +1,57 @@
+<?php
+
+use Magento\Framework\Escaper;
+use Magento\Framework\View\Element\Template;
+
+/** @var Template $block */
+/** @var Escaper $escaper */
+
+$isCartConfigureMode = $block->getData('is_cart_configure');
+$productInfoBlock = $block->getLayout()->getBlock('product.info');
+$formSubmitUrl = $productInfoBlock->getSubmitUrl($productInfoBlock->getProduct());
+?>
+<div class="add-to-cart"
+    <?php if (!$isCartConfigureMode): ?>
+        x-data="initAddToCart()" x-spread="eventListeners"
+    <?php else: ?>
+        x-data="initEditItemForm()"
+    <?php endif; ?>
+>
+    <button class="btn btn-primary btn-large"
+        <?php if (!$isCartConfigureMode): ?>
+            :class="{'btn-secondary' : isLoading, 'btn-primary' : !isLoading}"
+            :disabled="isLoading"
+            x-on:click="addToCart()"
+        <?php else: ?>
+            x-on:click="submitAction()"
+        <?php endif; ?>
+        <?php if (!$isCartConfigureMode): ?>
+            title="<?= $escaper->escapeHtmlAttr(__('Add to Cart')) ?>"
+        <?php else: ?>
+            title="<?= $escaper->escapeHtmlAttr(__('Update item')) ?>"
+        <?php endif; ?>>
+    <span>
+    <?php if (!$isCartConfigureMode): ?>
+        <?= $escaper->escapeHtml(__('Add to Cart')) ?>
+    <?php else: ?>
+        <?= $escaper->escapeHtml(__('Update item')) ?>
+    <?php endif; ?>
+    </span>
+    </button>
+</div>
+<?php if ($isCartConfigureMode): ?>
+    <script>
+        function initEditItemForm() {
+            return {
+                formUrl: '<?= $escaper->escapeJs($formSubmitUrl) ?>',
+                formId: '#product_addtocart_form',
+                submitAction() {
+                    const form = document.querySelector(this.formId)
+                    form.setAttribute('action', this.formUrl)
+                    form.submit();
+                }
+            }
+        }
+    </script>
+<?php endif; ?>
+<?= $block->getChildHtml('', true) ?>

@@ -1,0 +1,132 @@
+<?php
+
+// phpcs:disable Generic.Files.LineLength.TooLong
+
+use Magento\Framework\View\Element\Template;
+use Magento\Framework\Escaper;
+use Hyva\Theme\Model\ViewModelRegistry;
+use Hyva\Theme\ViewModel\CurrentProduct;
+use Hyva\Theme\ViewModel\Store;
+use IntegerNet\AddToCartGraphQl\ViewModel\AddToCartGraphQl;
+
+/** @var Template $block */
+/** @var Escaper $escaper */
+/** @var ViewModelRegistry $viewModels */
+/** @var Store $viewModelStore */
+/** @var CurrentProduct $viewModelProduct */
+/** @var AddToCartGraphQl $viewModelAddToCart */
+
+$viewModelProduct = $viewModels->require(CurrentProduct::class);
+$viewModelStore = $viewModels->require(Store::class);
+$viewModelAddToCart = $viewModels->require(AddToCartGraphQl::class);
+
+$product = $viewModelProduct->get();
+$productIsConfigurable = $viewModelAddToCart->isProductConfigurable();
+$addToCartQuery = $viewModelAddToCart->getAddToCartQuery();
+
+?>
+<script>
+    function initAddToCart() {
+        return {
+            cartId: null,
+            qty: null,
+            isLoading: true,
+            sku: '<?= $escaper->escapeJs($product->getSku()) ?>',
+            currentSelection: null,
+            selectedOptions: null,
+            setCartIdByCustomerData(customerData) {
+                if (customerData && customerData.cart && customerData.cart.cartId) {
+                    this.cartId = customerData.cart.cartId
+                    this.isLoading = false
+                }
+            },
+            getAddToCartQuery(cartId, qty, sku, selectedOptions) {
+                const addToCartQuery = `mutation <?= /** @noEscape */ $addToCartQuery ?>`
+                return addToCartQuery.replace('%cartId', cartId).replace('%sku', sku).replace('%selectedOptions', selectedOptions).replace('%qty', qty)
+            },
+            getSelectedValuesAsBase64() {
+                <?php // format needed, see https://devdocs.magento.com/guides/v2.4/graphql/mutations/add-products-to-cart.html#specify-the-sku-with-selected-options ?>
+                const selectedOptions = []
+
+                <?php if ($productIsConfigurable): ?>
+                for (const attributeId in this.selectedOptions) {
+                    if (this.selectedOptions.hasOwnProperty(attributeId)) {
+                        selectedOptions.push('"' + btoa('configurable/' + attributeId + '/' + this.selectedOptions[attributeId]) + '"')
+                    }
+                }
+                <?php endif; ?>
+
+                return selectedOptions.join(',')
+            },
+            addToCart() {
+                if (!this.isLoading) {
+                    if (!this.selectedOptions || !this.qty) {
+                        typeof window.dispatchMessages !== "undefined" && window.dispatchMessages(
+                            [{
+                                type: "error",
+                                text: "<?= $escaper->escapeJs(__("Please select all required options.")) ?>"
+                            }], 10000
+                        )
+                    }
+
+                    this.isLoading = true
+
+                    fetch('<?= $escaper->escapeUrl($block->getBaseUrl()) ?>graphql', {
+                            method: 'POST',
+                            headers: {
+                                'Content-Type': 'application/json',
+                                'X-Requested-With': 'XMLHttpRequest',
+                                'Store': '<?= /* @noEscape */ $viewModelStore->getStoreCode() ?>',
+                                credentials: 'include'
+                            },
+                            body: JSON.stringify({query: (this.getAddToCartQuery(this.cartId, this.qty, this.sku, this.getSelectedValuesAsBase64()))})
+                        }
+                    ).then((response) => {
+                            return response.json()
+                        }
+                    ).then((data) => {
+                        if (data && data.errors) {
+                            this.initErrorMessages(data.errors)
+                        }
+                        this.isLoading = false
+                    }).catch(error => {
+                        console.error(error)
+                        typeof window.dispatchMessages !== "undefined" && window.dispatchMessages(
+                            [{
+                                type: "error",
+                                text: "<?= $escaper->escapeJs(__("Something went wrong. Please try again.")) ?>"
+                            }], 10000
+                        )
+                    }).finally(() => {
+                        this.reloadCustomerData()
+                    })
+                }
+            },
+            clearErrorMessages() {
+                window.dispatchEvent(new CustomEvent('clear-messages'))
+            },
+            initErrorMessages(errors) {
+                let messages = []
+                for (const error in Object.keys(errors)) {
+                    messages.push({type: 'error', text: errors[error].message})
+                }
+                typeof window.dispatchMessages !== "undefined" && window.dispatchMessages(messages)
+            },
+            reloadCustomerData() {
+                const reloadCustomerDataEvent = new CustomEvent("reload-customer-section-data")
+                window.dispatchEvent(reloadCustomerDataEvent)
+            },
+            eventListeners: {
+                ['@update-currentSelection-<?= $escaper->escapeJs((int)$product->getId()) ?>.window'](event) {
+                    this.selectedOptions = event.detail
+                },
+                ['@update-qty-<?= (int)$product->getId() ?>.window'](event) {
+                    this.qty = event.detail
+                },
+                ['@private-content-loaded.window'](event) {
+                    this.setCartIdByCustomerData(event.detail.data)
+                },
+            }
+        }
+    }
+</script>
