@@ -1,4 +1,3 @@
-<<<<<<< HEAD
 # IntegerNet_AddToCartGraphQl Magento Module
 <div align="center">
 
@@ -58,6 +57,9 @@ This should be called whenever a selection is made, in Hyvä default you would p
         this.updateCurrentSelection()
     }
 
+### Default Qty (Hyvä)
+
+The default qty on init of add to cart button is set to 1 - ideally, you would rather change `Magento_Catalog/templates/product/view/quantity.phtml` to dispatch `updateChangeQty` on init, as addtocart component already listens to this event - this way, you would always get the correct default qty.
 
 ## Changelog
 
@@ -115,4 +117,3 @@ The MIT License (MIT). Please see [License File](LICENSE) for more information.
 [link-maintainability]: https://codeclimate.com/github/integer-net/magento2-addtocartgraphql
 [link-author]: https://github.com/lbuchholz
 [link-contributors]: ../../contributors
-=======

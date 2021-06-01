@@ -29,7 +29,7 @@ $addToCartQuery = $viewModelAddToCart->getAddToCartQuery();
     function initAddToCart() {
         return {
             cartId: null,
-            qty: null,
+            qty: 1,
             isLoading: true,
             sku: '<?= $escaper->escapeJs($product->getSku()) ?>',
             currentSelection: null,
