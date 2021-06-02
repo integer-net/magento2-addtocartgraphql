@@ -1,12 +1,12 @@
 {
-    "name": ":vendor/:package",
-    "description": ":description",
+    "name": "integer-net/magento2-addtocartgraphql",
+    "description": "This module provides support to add products to cart via GraphQl",
     "type": "magento2-module",
     "license": "MIT",
     "authors": [
         {
-            "name": ":author-name",
-            "email": ":author-email"
+            "name": "Lisa Buchholz",
+            "email": "lb@integer-net.de"
         }
     ],
     "minimum-stability": "stable",
@@ -15,12 +15,12 @@
             "registration.php"
         ],
         "psr-4": {
-            ":module-namespace\\:module-name\\": "src"
+            "IntegerNet\\AddToCartGraphQl\\": "src"
         }
     },
     "autoload-dev": {
         "psr-4": {
-            ":module-namespace\\:module-name\\": "tests/src"
+            "IntegerNet\\AddToCartGraphQl\\": "tests/src"
         }
     },
     "repositories": [
@@ -30,8 +30,8 @@
         }
     ],
     "require": {
-        "php": ":php-constraint",
-        "magento/framework": ":framework-constraint"
+        "php": "~7.3||~7.4",
+        "magento/framework": "^103.0.0"
     },
     "require-dev": {
         "roave/security-advisories": "dev-master",
